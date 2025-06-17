@@ -7,7 +7,7 @@ opencv-python
 pillow
 segment_anything
 matplotlib
-opencv-python-headless==4.5.5.62
+
 
 
 
