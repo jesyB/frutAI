@@ -82,7 +82,8 @@ st.markdown(
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Cargar modelo y transformaciones
-MODEL_PATH = "best_efficientnet_b3.pth"
+MODEL_PATH = os.path.join("prod", "best_efficientnet_b3.pth")
+# MODEL_PATH = "best_efficientnet_b3.pth"
 model, transform, class_names = cargar_modelo(MODEL_PATH, device)
 
 st.markdown('<div class="main-container">', unsafe_allow_html=True)
