@@ -10,6 +10,8 @@ from collections import defaultdict
 import torchvision.ops as ops
 import matplotlib.pyplot as plt
 import os
+from huggingface_hub import hf_hub_download
+
 
 
 
@@ -46,10 +48,12 @@ def segmentar_frutas(image_np, device):
     #sam_checkpoint = "sam_vit_h_4b8939.pth"
     #sam_checkpoint = os.path.join("prod", "sam_vit_h_4b8939.pth")
     # URL del checkpoint SAM en Hugging Face
-    sam_checkpoint_url = "https://huggingface.co/ybelkada/segment-anything/resolve/main/checkpoints/sam_vit_h_4b8939.pth"
-
+    #sam_checkpoint_url = "https://huggingface.co/ybelkada/segment-anything/resolve/main/checkpoints/sam_vit_h_4b8939.pth"
+    
     # Cargar checkpoint directamente desde la URL
-    sam_checkpoint = torch.hub.load_state_dict_from_url(sam_checkpoint_url, map_location=device)
+    #sam_checkpoint = torch.hub.load_state_dict_from_url(sam_checkpoint_url, map_location=device)
+    # Cargar el checkpoint desde Hugging Face
+    sam_checkpoint = hf_hub_download(repo_id="Roccola/sam-vit-h-checkpoint", filename="sam_vit_h_4b8939.pth")
 
     # Modelo SAM   
     
