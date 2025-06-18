@@ -8,3 +8,4 @@ pillow
 segment_anything
 matplotlib
 opencv-python-headless
+huggingface_hub
