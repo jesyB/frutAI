@@ -82,15 +82,16 @@ st.markdown(
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Cargar modelo y transformaciones
-MODEL_PATH = os.path.join("../prod", "best_efficientnet_b3.pth")
+#MODEL_PATH = os.path.join("prod", "best_efficientnet_b3.pth")
 # MODEL_PATH = "best_efficientnet_b3.pth"
+MODEL_PATH = os.path.join(os.path.dirname(_file_), "best_efficientnet_b3.pth")
 model, transform, class_names = cargar_modelo(MODEL_PATH, device)
 
 st.markdown('<div class="main-container">', unsafe_allow_html=True)
 
 # Mostrar imagen de portada correctamente
 #st.image("portada.jpg", use_container_width=True)
-st.image("../prod/portada.jpg", use_container_width=True)
+st.image("prod/portada.jpg", use_container_width=True)
 
 
 st.markdown('<p class="description">📸 Subí una imagen de frutas y nuestro modelo te dirá qué frutas ve.</p>', unsafe_allow_html=True)
