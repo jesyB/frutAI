@@ -9,6 +9,7 @@ from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 from collections import defaultdict
 import torchvision.ops as ops
 import matplotlib.pyplot as plt
+import os
 
 
 
@@ -42,7 +43,8 @@ def cargar_modelo(path_modelo, device):
 
 
 def segmentar_frutas(image_np, device):
-    sam_checkpoint = "sam_vit_h_4b8939.pth"
+    #sam_checkpoint = "sam_vit_h_4b8939.pth"
+    sam_checkpoint = os.path.join("prod", "sam_vit_h_4b8939.pth")
     model_type = "vit_h"
 
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
