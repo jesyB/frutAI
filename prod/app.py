@@ -89,8 +89,8 @@ model, transform, class_names = cargar_modelo(MODEL_PATH, device)
 st.markdown('<div class="main-container">', unsafe_allow_html=True)
 
 # Mostrar imagen de portada correctamente
-st.image("portada.jpg", use_container_width=True)
-
+#st.image("portada.jpg", use_container_width=True)
+st.image("prod/portada.jpg", use_container_width=True)
 
 
 st.markdown('<p class="description">📸 Subí una imagen de frutas y nuestro modelo te dirá qué frutas ve.</p>', unsafe_allow_html=True)
