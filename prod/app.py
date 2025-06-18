@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 from PIL import Image
 from utils import cargar_modelo, segmentar_frutas, clasificar_imagen, mostrar_recetas
-
+import os
 import io
 import base64
 
