@@ -44,7 +44,15 @@ def cargar_modelo(path_modelo, device):
 
 def segmentar_frutas(image_np, device):
     #sam_checkpoint = "sam_vit_h_4b8939.pth"
-    sam_checkpoint = os.path.join("prod", "sam_vit_h_4b8939.pth")
+    #sam_checkpoint = os.path.join("prod", "sam_vit_h_4b8939.pth")
+    # URL del checkpoint SAM en Hugging Face
+    sam_checkpoint_url = "https://huggingface.co/ybelkada/segment-anything/resolve/main/checkpoints/sam_vit_h_4b8939.pth"
+
+    # Cargar checkpoint directamente desde la URL
+    sam_checkpoint = torch.hub.load_state_dict_from_url(sam_checkpoint_url, map_location=device)
+
+    # Modelo SAM   
+    
     model_type = "vit_h"
 
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
