@@ -2,7 +2,7 @@ import streamlit as st
 import torch
 import numpy as np
 from PIL import Image
-from utils import cargar_modelo, segmentar_frutas, generar_y_mostrar_receta
+from utils import cargar_modelo, segmentar_frutas, generar_y_mostrar_receta, clasificar_frutas
 import os
 from dotenv import load_dotenv
 import openai
@@ -78,45 +78,37 @@ st.image("prod/portada.jpg", use_container_width=True)
 st.markdown('<p class="description">📸 Subí una imagen de frutas y nuestro modelo te dirá qué frutas ve.</p>', unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("Subí una imagen de frutas o arrastrá una imagen", type=["jpg", "jpeg", "png"])
+
 if uploaded_file:
     image = Image.open(uploaded_file).convert("RGB")
     image_np = np.array(image)
     st.image(image_np, caption="📷 Imagen original", use_container_width=True)
 
-    with st.spinner("🔍 Segmentando frutas..."):
-        frutas_crop = segmentar_frutas(image_np, device)
+    if st.button("🍌 Segmentar y Clasificar"):
+        with st.spinner("🔍 Segmentando frutas..."):
+            frutas_crop = segmentar_frutas(image_np, device)
 
-    # Filtrar frutas demasiado pequeñas
-    frutas_crop = [f for f in frutas_crop if f.shape[0] >= 50 and f.shape[1] >= 50]
+        frutas_crop = [f for f in frutas_crop if f.shape[0] >= 50 and f.shape[1] >= 50]
 
-    with st.spinner("🧠 Clasificando frutas..."):
-        if frutas_crop:
-            batch = torch.stack([transform(Image.fromarray(cv2.resize(f, (300, 300)))) for f in frutas_crop]).to(device)
-            with torch.no_grad():
-                outputs = model(batch)
-                probs = torch.softmax(outputs, dim=1)
-                confs, preds = torch.max(probs, dim=1)
+        with st.spinner("🧠 Clasificando frutas..."):
+            resultados = clasificar_frutas(frutas_crop, model, transform, class_names, device)
 
-            resultados = [
-                {"label": class_names[p.item()], "conf": c.item(), "imagen": frutas_crop[i]}
-                for i, (p, c) in enumerate(zip(preds, confs)) if c.item() > 0.7
-            ]
+        if resultados:
+            st.subheader("🍓 Frutas detectadas")
+            cols = st.columns(min(4, len(resultados)))
+            for i, resultado in enumerate(resultados):
+                col = cols[i % len(cols)]
+                with col:
+                    st.image(resultado["imagen"], use_container_width=True)
+                    st.markdown(
+                        f"<div style='font-size: 26px; font-weight: bold; margin-top: 6px;'>{resultado['label']} ({resultado['conf']:.2%})</div>",
+                        unsafe_allow_html=True
+                    )
+
+            frutas_detectadas = [r["label"] for r in resultados]
+            frutas_str = ", ".join(frutas_detectadas)
+            generar_y_mostrar_receta(frutas_str)
         else:
-            resultados = []
-
-    if resultados:
-        st.subheader("🍓 Frutas detectadas")
-
-        cols = st.columns(min(4, len(resultados)))  # Hasta 4 columnas
-        for i, resultado in enumerate(resultados):
-            col = cols[i % len(cols)]
-            with col:
-                st.image(resultado["imagen"], caption=f"{resultado['label']} ({resultado['conf']:.2%})", use_container_width=True)
-
-        frutas_detectadas = [r["label"] for r in resultados]
-        frutas_str = ", ".join(frutas_detectadas)
-        generar_y_mostrar_receta(frutas_str)
-    else:
-        st.warning("⚠️ No se encontraron frutas confiables para clasificar.")
+            st.warning("⚠️ No se encontraron frutas confiables para clasificar.")
 
 st.markdown('</div>', unsafe_allow_html=True)

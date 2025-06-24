@@ -155,6 +155,23 @@ def generar_y_mostrar_receta(frutas_str: str):
             st.text(str(e))
 
 
+
+def clasificar_frutas(frutas_crop, model, transform, class_names, device, threshold=0.7):
+    if not frutas_crop:
+        return []
+
+    batch = torch.stack([transform(Image.fromarray(cv2.resize(f, (300, 300)))) for f in frutas_crop]).to(device)
+    with torch.no_grad():
+        outputs = model(batch)
+        probs = torch.softmax(outputs, dim=1)
+        confs, preds = torch.max(probs, dim=1)
+
+    return [
+        {"label": class_names[p.item()], "conf": c.item(), "imagen": frutas_crop[i]}
+        for i, (p, c) in enumerate(zip(preds, confs)) if c.item() > threshold
+    ]
+
+
 def render_receta_compacta(receta: str):
     receta = receta.strip()
     receta = re.sub(r'\n{2,}', '\n', receta)
