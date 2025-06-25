@@ -37,7 +37,8 @@ def cargar_modelo(path_modelo, device):
 
     return model, transform, class_names
 
-
+#Revisa si ya está descargado el archivo del modelo SAM y devuelve la ruta local, sino esta descargado, lo descarga y lo coloca en prod
+#⚠️ Esto es importante porque sin ese archivo, el modelo no puede segmentar nada.
 def obtener_checkpoint_sam():
     local_path = os.path.join("prod", "sam_vit_h_4b8939.pth")
     if not os.path.exists(local_path):
@@ -51,7 +52,9 @@ def obtener_checkpoint_sam():
         print("✅ Checkpoint descargado en:", local_path)
     return local_path
 
-
+#Calcula el IOU (Intersection over Union) entre dos cajas delimitadoras.
+#El IOU mide cuánto se solapan dos regiones.
+#Se usa para decidir si dos máscaras son de la misma fruta.
 def calcular_iou(box1, box2):
     x1, y1, x2, y2 = box1
     x1b, y1b, x2b, y2b = box2
@@ -66,7 +69,10 @@ def calcular_iou(box1, box2):
 
     return inter_area / union_area if union_area != 0 else 0
 
+#Toma una lista de máscaras con sus bounding boxes.
+#Agrupa máscaras que se solapan bastante (IOU mayor a 0.6).
 
+#Así evitás duplicar frutas si fueron segmentadas en partes separadas.
 def agrupar_por_iou(masks, iou_thresh=0.6):
     grupos = []
     usados = set()
@@ -80,6 +86,13 @@ def agrupar_por_iou(masks, iou_thresh=0.6):
             if j in usados:
                 continue
             box2 = masks[j]["bbox"]
+
+            #Recibe dos cajas (bounding boxes).
+            #Calcula cuánto se solapan (la intersección).
+            #Divide esa intersección por el área total combinada de ambas cajas (la unión).
+            #El resultado es un número entre 0 y 1:
+            #Cerca de 1: las cajas son muy similares o se superponen mucho.
+            #Cerca de 0: están muy separadas.
             iou = calcular_iou(box1, box2)
             if iou >= iou_thresh:
                 grupo.append(j)
@@ -89,13 +102,14 @@ def agrupar_por_iou(masks, iou_thresh=0.6):
 
     return grupos
 
-
+#Este es el corazón de la segmentación.
 def segmentar_frutas(image_np, device):
+    #Llama a obtener_checkpoint_sam() para obtener el modelo SAM.
     sam_checkpoint = obtener_checkpoint_sam()
     model_type = "vit_h"
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
     sam.to(device).eval()
-
+    #Carga y configura el modelo SAM para segmentar objetos automáticamente
     mask_generator = SamAutomaticMaskGenerator(
         sam,
         points_per_side=12,
@@ -104,10 +118,16 @@ def segmentar_frutas(image_np, device):
         min_mask_region_area=15000,
         crop_n_layers=0
     )
-
+    #Filtra máscaras con poca confianza (menor a 0.9).
     confidence_threshold = 0.9
-    masks = mask_generator.generate(image_np)
 
+    #Aplica el modelo sobre la imagen:
+    masks = mask_generator.generate(image_np)
+    
+
+    #Para cada máscara válida:
+    #Convierte a una máscara binaria.
+    #Calcula su bounding box y la guarda.
     masks_filtradas = []
     for m in masks:
         if m["predicted_iou"] >= confidence_threshold:
@@ -116,9 +136,16 @@ def segmentar_frutas(image_np, device):
             m["bbox"] = [x, y, x + w, y + h]
             masks_filtradas.append(m)
 
+    #Usa agrupar_por_iou() para combinar máscaras superpuestas.
     grupos = agrupar_por_iou(masks_filtradas, iou_thresh=0.6)
 
     frutas_crop = []
+
+    #Para cada grupo de máscaras:
+    #Las fusiona.
+    #Calcula la caja alrededor.
+    #Recorta la imagen en esa caja.
+    #Aplica la máscara para dejar solo la fruta visible.
     for grupo in grupos:
         mask_combinada = np.zeros(image_np.shape[:2], dtype=np.uint8)
         for idx in grupo:
@@ -130,6 +157,7 @@ def segmentar_frutas(image_np, device):
         frutas_crop.append(fruta_visible)
 
     print(f"\033[32mSe generaron {len(frutas_crop)} regiones para clasificar.")
+    #Devuelve una lista con cada fruta recortada (frutas_crop).
     return frutas_crop
 
 

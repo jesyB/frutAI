@@ -41,7 +41,7 @@ cd frut-ai/prod
 ```bash
 python -m venv venv
 source venv/bin/activate       # En Windows: venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r prod/requirements.txt
 ```
 
 > Asegurate de tener `git` instalado para clonar el repo de SAM si usás requirements.txt con el repo remoto.
@@ -51,7 +51,7 @@ pip install -r requirements.txt
 ### 3. Ejecutar la app
 
 ```bash
-streamlit run app.py
+streamlit run prod/app.py
 ```
 
 ---
