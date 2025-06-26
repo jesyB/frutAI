@@ -112,3 +112,6 @@ if uploaded_file:
             st.warning("⚠️ No se encontraron frutas confiables para clasificar.")
 
 st.markdown('</div>', unsafe_allow_html=True)
+
+
+
